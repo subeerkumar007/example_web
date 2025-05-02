@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -6,13 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Mapbox GL JS CSS -->
+
   <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
   <!-- Mapbox Directions CSS -->
   <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" rel="stylesheet" />
 
   <!-- Mapbox GL JS -->
+
   <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+
   <!-- Mapbox Directions JS -->
+
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
 
   <style>
@@ -32,15 +37,8 @@
       height: 100%;
       width: 100%;
     }
-
-    .ambulance-marker {
-      background-image: url('https://cdn-icons-png.flaticon.com/512/2965/2965567.png');
-      background-size: cover;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-    }
   </style>
+
 </head>
 
 <body>
@@ -48,13 +46,13 @@
 
   <script>
     // Set your Mapbox access token
-    mapboxgl.accessToken = 'your_mapbox_token';
+    mapboxgl.accessToken = 'pk.eyJ1IjoibW9oYW5zaGFybWEwMDAwNyIsImEiOiJjbWE2Y2U5OGEwbWR3MmtzZ3hyczQxdWQzIn0.uFhP71t33Jh1bRPn1U55Bg';
 
     // Initialize map
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-21.9270884, 64.1436456], // Starting coordinates (ambulance location)
+      center: [-21.9270884, 64.1436456],
       zoom: 13
     });
 
@@ -72,30 +70,29 @@
     });
     map.addControl(directions, 'top-left');
 
+    // Function to create ambulance marker element
+    function createAmbulanceElement() {
+      const el = document.createElement('div');
+      el.style.fontSize = '30px';
+      el.style.lineHeight = '1';
+      el.style.textAlign = 'center';
+      el.style.width = '40px';
+      el.style.height = '40px';
+      el.style.borderRadius = '50%';
+      el.style.backgroundColor = 'white';
+      el.style.display = 'flex';
+      el.style.justifyContent = 'center';
+      el.style.alignItems = 'center';
+      el.textContent = '🚑'; // Ambulance emoji
+      return el;
+    }
+
     // Create ambulance marker
-    const ambulanceEl = document.createElement('div');
-    ambulanceEl.className = 'ambulance-marker';
+    const ambulanceEl = createAmbulanceElement();
     const ambulanceMarker = new mapboxgl.Marker({
       element: ambulanceEl,
       draggable: false
     }).setLngLat([-21.9270884, 64.1436456]).addTo(map);
-
-    // Update location from GPS
-    if ("geolocation" in navigator) {
-      navigator.geolocation.watchPosition(position => {
-        const { latitude, longitude } = position.coords;
-        ambulanceMarker.setLngLat([longitude, latitude]);
-
-        // Send coordinates to backend (use your actual API endpoint)
-        fetch('https://your-backend-api.com/update-location', {
-          method: 'POST',
-          body: JSON.stringify({ latitude, longitude }),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-      });
-    }
 
     // Move ambulance along the route after directions are set
     directions.on('route', e => {
@@ -115,5 +112,8 @@
       animate();
     }
   </script>
+
 </body>
 </html>
+
+
