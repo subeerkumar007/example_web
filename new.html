@@ -1,40 +1,119 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Switch to Mapbox</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    {/* Import Mapbox GL JS */}
-    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-    <link
-      href="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="utf-8" />
+  <title>Ambulance Tracking with Directions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
+  <!-- Mapbox GL JS CSS -->
+  <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+  <!-- Mapbox Directions CSS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" rel="stylesheet" />
+
+  <!-- Mapbox GL JS -->
+  <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+  <!-- Mapbox Directions JS -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #ffffff;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+
+    .ambulance-marker {
+      background-image: url('https://cdn-icons-png.flaticon.com/512/2965/2965567.png');
+      background-size: cover;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script>
+    // Set your Mapbox access token
+    mapboxgl.accessToken = 'your_mapbox_token';
+
+    // Initialize map
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [-21.9270884, 64.1436456], // Starting coordinates (ambulance location)
+      zoom: 13
+    });
+
+    map.addControl(new mapboxgl.NavigationControl());
+
+    // Add Mapbox Directions control
+    const directions = new MapboxDirections({
+      accessToken: mapboxgl.accessToken,
+      unit: 'metric',
+      profile: 'mapbox/driving',
+      controls: {
+        inputs: true,
+        instructions: true
       }
+    });
+    map.addControl(directions, 'top-left');
 
-      #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
+    // Create ambulance marker
+    const ambulanceEl = document.createElement('div');
+    ambulanceEl.className = 'ambulance-marker';
+    const ambulanceMarker = new mapboxgl.Marker({
+      element: ambulanceEl,
+      draggable: false
+    }).setLngLat([-21.9270884, 64.1436456]).addTo(map);
+
+    // Update location from GPS
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(position => {
+        const { latitude, longitude } = position.coords;
+        ambulanceMarker.setLngLat([longitude, latitude]);
+
+        // Send coordinates to backend (use your actual API endpoint)
+        fetch('https://your-backend-api.com/update-location', {
+          method: 'POST',
+          body: JSON.stringify({ latitude, longitude }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      });
+    }
+
+    // Move ambulance along the route after directions are set
+    directions.on('route', e => {
+      const coords = e.route[0].geometry.coordinates;
+      moveAmbulance(coords, ambulanceMarker);
+    });
+
+    function moveAmbulance(route, marker) {
+      let i = 0;
+      function animate() {
+        if (i < route.length) {
+          marker.setLngLat(route[i]);
+          i++;
+          requestAnimationFrame(animate);
+        }
       }
-    </style>
-  </head>
-
-  <body>
-    {/* Create a container for the map. */}
-    <div id="map"></div>
-
-    <script>
-      // Add your Mapbox access token.
-      mapboxgl.accessToken = 'pk.eyJ1IjoibW9oYW5zaGFybWEwMDAwNyIsImEiOiJjbWE2Y2U5OGEwbWR3MmtzZ3hyczQxdWQzIn0.uFhP71t33Jh1bRPn1U55Bg ';
-
-      // Code from the next step will go here.
-    </script>
-  </body>
+      animate();
+    }
+  </script>
+</body>
 </html>
